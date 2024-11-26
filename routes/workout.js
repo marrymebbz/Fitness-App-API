@@ -18,6 +18,9 @@ router.put('/updateWorkout/:workoutId', verify, isLoggedIn, workoutController.up
 router.delete('/deleteWorkout/:workoutId', verify, isLoggedIn, workoutController.deleteWorkout);
 
 // Complete a workout by ID
-router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.deleteWorkout);
+// router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.completeWorkoutStatus);
+
+router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.completeWorkoutStatus);
+
 
 module.exports = router;
