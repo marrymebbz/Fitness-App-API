@@ -21,7 +21,7 @@ app.use(express.urlencoded({extended:true}));
 
 //[Database Connection]
 //Connect to our MongoDB
-mongoose.connect("mongodb+srv://admin:admin123@wdc028-b461.encgn.mongodb.net/Fitness-App-API?retryWrites=true&w=majority&appName=WDC028-B461");
+mongoose.connect(process.env.MONGODB_STRING);
 //prompts a message once the connection is 'open' and we are connected successfully to the db
 mongoose.connection.once('open',()=>console.log("Now connected to MongoDB Atlas"));
 
