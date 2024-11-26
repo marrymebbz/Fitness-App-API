@@ -1,11 +1,10 @@
 {
-  "name": "s42-s50",
+  "name": "fitnessapi",
   "version": "1.0.0",
-  "description": "",
+  "description": "SAMPLE DATA: ---------------------------------- 1. Sample User     - Email: admin@gmail.com     - Password: admin123     - Data:     {         \"email\": \"admin@gmail.com\",         \"password\": \"admin123\"     } ---------------------------------- 2. Sample Workout     - Name: Sample Exercise     - Duration: 15 mins     - Status: Pending     - Data:     {         \"name\": \"Sample Exercise\",         \"duration\": \"15 mins\",         \"status\": \"Pending\",     } ----------------------------------",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -15,9 +14,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.8.3",
-    "mongodb": "^4.0.0"
+    "mongoose": "^8.8.3"
   }
 }
