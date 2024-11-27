@@ -39,7 +39,7 @@ module.exports.addWorkout = async (req, res) => {
             userId: userId,
             name: req.body.name,
             duration: req.body.duration,
-            status: req.body.status || 'Pending',
+            status: req.body.status
         });
 
         const savedWorkout = await newWorkout.save();
@@ -85,79 +85,67 @@ module.exports.getMyWorkouts = (req, res) => {
 };
 
 /* Update workouts */
-// module.exports.updateWorkout = (req, res)=>{
-
-//     let updatedWorkout = {
-//         name: req.body.name,
-//         duration: req.body.duration,
-//         dateAdded: req.body.dateAdded,
-//         status: req.body.status,
-//     }
-//     return Workout.findByIdAndUpdate(req.params.workoutId, updatedWorkout)
-//     .then(workout => {
-//         if (workout) {
-//             res.status(201).send({
-//                 message: 'Workout updated successfully',
-//                 updatedWorkout
-//             });
-//         } else {
-//             res.status(404).send({ message: 'Workout not found' });
-//         }
-//     })
-//     .catch(error => errorHandler(error, req, res));
-// };
-
 // module.exports.updateWorkout = (req, res) => {
 //     const userId = req.user.id;
+//     const workoutId = req.params.workoutId;
         
 //     const updatedWorkout = {
 //         userId: userId,
 //         name: req.body.name,
-//         duration: req.body.duration
+//         duration: req.body.duration,
+//         status: req.body.status,
 //     };
 
-//     Workout.findByIdAndUpdate(req.params.workoutId, updatedWorkout, { new: true })
+//     Workout.findByIdAndUpdate(workoutId, updatedWorkout, { new: true })
 //         .then(workout => {
 //             if (workout) {
-//                 res.status(200).send({ message: 'Workout updated successfully', workout });
+//                 res.status(200).send({ message: 'Workout updated successfully', updatedWorkout });
 //             } else {
 //                 res.status(404).send({ message: 'Workout not found.' });
 //             }
 //         })
 //         .catch(err => errorHandler(err, req, res));
 // };
-
 module.exports.updateWorkout = async (req, res) => {
     try {
-        const userId = req.user.id; // Extract user ID from authenticated user
-        const { workoutId } = req.params; // Extract workout ID from URL
+        const userId = req.user.id;
+        const workoutId = req.params.workoutId;
 
-        if (!mongoose.Types.ObjectId.isValid(workoutId)) {
-            return res.status(400).send({ message: 'Invalid workout ID.' });
-        }
-
-        const updatedWorkout = {
+        const updatedWorkoutData = {
+            userId: userId,
             name: req.body.name,
             duration: req.body.duration,
+            status: req.body.status || 'Completed'
         };
 
-        // Find and update the workout only if it belongs to the logged-in user
-        const workout = await Workout.findOneAndUpdate(
-            { _id: workoutId, userId },
-            updatedWorkout,
+        const updatedWorkout = await Workout.findByIdAndUpdate(
+            workoutId,
+            updatedWorkoutData,
             { new: true }
-        );
+        ).populate('userId');
 
-        if (!workout) {
-            return res.status(404).send({ message: 'Workout not found or does not belong to the user.' });
+        if (updatedWorkout) {
+            res.status(200).send( { 
+                message: 'Workout updated successfully',
+                updatedWorkout: {
+                    _id: updatedWorkout._id,
+                    userId: updatedWorkout.userId._id,
+                    name: updatedWorkout.name,
+                    duration: updatedWorkout.duration,
+                    status: updatedWorkout.status,
+                    dateAdded: updatedWorkout.dateAdded,
+                    __v: updatedWorkout.__v
+            }
+            });
+        } else {
+            // If the workout is not found
+            res.status(404).send({ message: 'Workout not found.' });
         }
-
-        res.status(200).send({ message: 'Workout updated successfully.', workout });
     } catch (err) {
-        res.status(500).send({ message: 'Error updating workout.', error: err.message });
+        // Handle errors using a predefined error handler
+        errorHandler(err, req, res);
     }
 };
-
 
 /* Delete workouts */
 module.exports.deleteWorkout = (req, res) => {
@@ -208,48 +196,49 @@ module.exports.deleteWorkout = (req, res) => {
 //         .catch(err => errorHandler(err, req, res));
 // };
 
-// module.exports.completeWorkoutStatus = (req, res) => {
-//     const userId = req.user.id;
+module.exports.completeWorkoutStatus = (req, res) => {
+    const userId = req.user.id;
+    const workoutId = req.params.workoutId
         
-//     const updatedStatusWorkout = {
-//         userId: userId,
-//         name: req.body.name,
-//         duration: req.body.duration,
-//         status: 'Completed'
-//     };
+    const updatedStatusWorkout = {
+        userId: userId,
+        name: req.body.name,
+        duration: req.body.duration,
+        status: 'Completed'
+    };
 
-//     Workout.findByIdAndUpdate(req.params.workoutId, updatedStatusWorkout, { new: true })
-//         .then(workout => {
-//             if (workout) {
-//                 res.status(200).send({ message: 'Workout marked as completed.', workout });
-//             } else {
-//                 res.status(404).send({ message: 'Workout not found.' });
-//             }
-//         })
-//         .catch(err => errorHandler(err, req, res));
-// };
-
-module.exports.completeWorkoutStatus = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { workoutId } = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(workoutId)) {
-            return res.status(400).send({ message: 'Invalid workout ID.' });
-        }
-
-        const workout = await Workout.findOneAndUpdate(
-            { _id: workoutId, userId },
-            { status: 'Completed' },
-            { new: true }
-        );
-
-        if (!workout) {
-            return res.status(404).send({ message: 'Workout not found or does not belong to the user.' });
-        }
-
-        res.status(200).send({ message: 'Workout status updated successfully.', workout });
-    } catch (err) {
-        res.status(500).send({ message: 'Error completing workout status.', error: err.message });
-    }
+    Workout.findByIdAndUpdate(workoutId, updatedStatusWorkout, { new: true })
+        .then(workout => {
+            if (workout) {
+                res.status(200).send({ message: 'Workout marked as completed.', workout });
+            } else {
+                res.status(404).send({ message: 'Workout not found.' });
+            }
+        })
+        .catch(err => errorHandler(err, req, res));
 };
+
+// module.exports.completeWorkoutStatus = async (req, res) => {
+//     try {
+//         const userId = req.user.id;
+//         const { workoutId } = req.params;
+
+//         if (!mongoose.Types.ObjectId.isValid(workoutId)) {
+//             return res.status(400).send({ message: 'Invalid workout ID.' });
+//         }
+
+//         const workout = await Workout.findOneAndUpdate(
+//             { _id: workoutId, userId },
+//             { status: 'Completed' },
+//             { new: true }
+//         );
+
+//         if (!workout) {
+//             return res.status(404).send({ message: 'Workout not found or does not belong to the user.' });
+//         }
+
+//         res.status(200).send({ message: 'Workout status updated successfully.', workout });
+//     } catch (err) {
+//         res.status(500).send({ message: 'Error completing workout status.', error: err.message });
+//     }
+// };

@@ -64,7 +64,7 @@ module.exports.verify = (req, res, next) =>{
 				});
 			}else{
 
-				console.log("result from verify method")
+				console.log("Result from verify method")
 				console.log(decodedToken)
 
 				req.user = decodedToken;

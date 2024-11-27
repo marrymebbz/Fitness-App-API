@@ -12,14 +12,12 @@ router.post('/addWorkout', verify, isLoggedIn, workoutController.addWorkout);
 router.get('/getMyWorkouts', verify, isLoggedIn, workoutController.getMyWorkouts);
 
 // Update a workout by ID
-router.put('/updateWorkout/:workoutId', verify, isLoggedIn, workoutController.updateWorkout);
+router.patch('/updateWorkout/:workoutId', verify, isLoggedIn, workoutController.updateWorkout);
 
 // Delete a workout by ID
 router.delete('/deleteWorkout/:workoutId', verify, isLoggedIn, workoutController.deleteWorkout);
 
 // Complete a workout by ID
-// router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.completeWorkoutStatus);
-
 router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.completeWorkoutStatus);
 
 module.exports = router;
