@@ -5,6 +5,8 @@ const User = require("../models/User");
 const auth = require("../auth");
 const {errorHandler} = require("../auth");
 
+const mongoose = require('mongoose');
+
 // Register User
 module.exports.registerUser = (req, res) => {
     const {email, password} = req.body;

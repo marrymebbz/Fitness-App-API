@@ -1,6 +1,15 @@
 const mongoose = require('mongoose');
 
 const workoutSchema = new mongoose.Schema({
+    // userId: {
+	//   type: String,  // Reference to the user
+	//   required: [true, 'User ID is required.']
+    // },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId, // Reference to the user
+        ref: 'User', // User model
+        required: [true, 'User ID is required.']
+    },
     name: {
         type: String,
         required: [true, 'Workout name is required.']
@@ -14,8 +23,8 @@ const workoutSchema = new mongoose.Schema({
         default: Date.now
     },
     status: {
-        type: String,
-        required: [true, 'Status is required.']
+      type: String,
+      default: 'Pending'
     }
 });
 

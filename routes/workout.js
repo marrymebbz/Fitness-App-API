@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/addWorkout', verify, isLoggedIn, workoutController.addWorkout);
 
 // Retrieve all workouts
-router.get('/getMyWorkouts', verify, isLoggedIn, workoutController.getAllWorkouts);
+router.get('/getMyWorkouts', verify, isLoggedIn, workoutController.getMyWorkouts);
 
 // Update a workout by ID
 router.put('/updateWorkout/:workoutId', verify, isLoggedIn, workoutController.updateWorkout);
@@ -21,6 +21,5 @@ router.delete('/deleteWorkout/:workoutId', verify, isLoggedIn, workoutController
 // router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.completeWorkoutStatus);
 
 router.patch('/completeWorkoutStatus/:workoutId', verify, isLoggedIn, workoutController.completeWorkoutStatus);
-
 
 module.exports = router;

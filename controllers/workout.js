@@ -1,61 +1,58 @@
 const Workout = require("../models/Workout");
-const {errorHandler} = require("../auth");
 const User = require("../models/User");
+const {errorHandler} = require("../auth");
+const mongoose = require("mongoose");
 
 /* Add workouts */
 // module.exports.addWorkout = (req, res) => {
-//     let newWorkout = new Workout({
+//     const userId = req.user.id;
+
+//     const newWorkout = new Workout({
+//         userId: userId,
 //         name: req.body.name,
 //         duration: req.body.duration,
-//         status: req.body.status
 //     });
 
-//     Workout.findOne({ name: req.body.name })
-//     .then(existingWorkout => {
-//         if (existingWorkout) {
-//             return res.status(409).send({ message: 'Workout already exists' });
-//         } else {
-//             return newWorkout.save()
-//             .then(result => {
-//                 res.status(201).send({
-//                     message: 'Workout added successfully',
-//                     workout: result
-//                 });
-//             })
-//             .catch(err => errorHandler(err, req, res));
-//         }
-//     })
-//     .catch(error => errorHandler(error, req, res));                     
+//     Workout.findOne({ name: req.body.name, userId: userId })
+//         .then(existingWorkout => {
+//             if (existingWorkout) {
+//                 return res.status(409).send({ message: 'Workout already exists' });
+//             } else {
+//                 return newWorkout.save()
+//                     .then(result => res.status(201).send({ message: 'Workout added successfully', workout: result }))
+//                     .catch(err => errorHandler(err, req, res));
+//             }
+//         })
+//         .catch(err => errorHandler(err, req, res));
 // };
+module.exports.addWorkout = async (req, res) => {
+    try {
+        const userId = req.user.id;
 
-module.exports.addWorkout = (req, res) => {
-    // Create a new workout object using the data from the request body
-    const newWorkout = new Workout({
-        name: req.body.name,
-        duration: req.body.duration,
-        status: req.body.status
-    });
+        const existingWorkout = await Workout.findOne({ name: req.body.name, userId });
 
-    // Check if the workout already exists
-    Workout.findOne({ name: req.body.name })
-    .then(existingWorkout => {
         if (existingWorkout) {
-            // If workout already exists, return a conflict status code (409)
-            return res.status(409).send({ message: 'Workout already exists' });
-        } else {
-            // If workout does not exist, save the new workout
-            return newWorkout.save()
-            .then(result => {
-                // Return a 201 status code for successful creation and include the new workout data
-                res.status(201).send({
-                    workout: result // Return the saved workout object in the response
-                });
-            })
-            .catch(err => errorHandler(err, req, res)); // Handle any errors during save
+            return res.status(409).send({ message: 'Workout already exists.' });
         }
-    })
-    .catch(error => errorHandler(error, req, res)); // Handle errors when checking for existing workouts
+
+        const newWorkout = new Workout({
+            userId: userId,
+            name: req.body.name,
+            duration: req.body.duration,
+            status: req.body.status || 'Pending',
+        });
+
+        const savedWorkout = await newWorkout.save();
+
+        res.status(201).send({
+            message: 'Workout added successfully.',
+            workout: savedWorkout,
+        });
+    } catch (err) {
+        res.status(500).send({ message: 'Error adding workout.', error: err.message });
+    }
 };
+
 
 
 
@@ -73,24 +70,19 @@ module.exports.addWorkout = (req, res) => {
 //     .catch(error => errorHandler(error, req, res));
 // };
 
-module.exports.getAllWorkouts = (req, res) => {
-    const userId = req.user._id; // Extract user ID from authenticated request
+module.exports.getMyWorkouts = (req, res) => {
+    const userId = req.user.id;
 
-    return Workout.find({ userId }) // Retrieve workouts for the logged-in user
-        .then(result => {
-            if (result.length > 0) {
-                return res.status(200).send({
-                    workouts: result
-                });
+    Workout.find({ userId })
+        .then(workouts => {
+            if (workouts.length > 0) {
+                res.status(200).send({ workouts });
             } else {
-                return res.status(404).send({
-                    message: 'No workouts found for this user.'
-                });
+                res.status(404).send({ message: 'No workouts found.' });
             }
         })
-        .catch(error => errorHandler(error, req, res));
+        .catch(err => errorHandler(err, req, res));
 };
-
 
 /* Update workouts */
 // module.exports.updateWorkout = (req, res)=>{
@@ -115,44 +107,71 @@ module.exports.getAllWorkouts = (req, res) => {
 //     .catch(error => errorHandler(error, req, res));
 // };
 
-module.exports.updateWorkout = (req, res) => {
-    // Create the updated workout object with data from the request body
-    const updatedWorkout = {
-        name: req.body.name,
-        duration: req.body.duration,
-        dateAdded: req.body.dateAdded,
-        status: req.body.status,
-    };
+// module.exports.updateWorkout = (req, res) => {
+//     const userId = req.user.id;
+        
+//     const updatedWorkout = {
+//         userId: userId,
+//         name: req.body.name,
+//         duration: req.body.duration
+//     };
 
-    // Find the workout by ID and update it
-    return Workout.findByIdAndUpdate(req.params.workoutId, updatedWorkout, { new: true }) // { new: true } returns the updated document
-    .then(workout => {
-        if (workout) {
-            // If workout found and updated, respond with the updated workout
-            res.status(200).send({
-                message: 'Workout updated successfully',
-                workout // Send the updated workout object
-            });
-        } else {
-            // If workout not found, respond with a 404
-            res.status(404).send({ message: 'Workout not found' });
+//     Workout.findByIdAndUpdate(req.params.workoutId, updatedWorkout, { new: true })
+//         .then(workout => {
+//             if (workout) {
+//                 res.status(200).send({ message: 'Workout updated successfully', workout });
+//             } else {
+//                 res.status(404).send({ message: 'Workout not found.' });
+//             }
+//         })
+//         .catch(err => errorHandler(err, req, res));
+// };
+
+module.exports.updateWorkout = async (req, res) => {
+    try {
+        const userId = req.user.id; // Extract user ID from authenticated user
+        const { workoutId } = req.params; // Extract workout ID from URL
+
+        if (!mongoose.Types.ObjectId.isValid(workoutId)) {
+            return res.status(400).send({ message: 'Invalid workout ID.' });
         }
-    })
-    .catch(error => errorHandler(error, req, res)); // Handle errors
+
+        const updatedWorkout = {
+            name: req.body.name,
+            duration: req.body.duration,
+        };
+
+        // Find and update the workout only if it belongs to the logged-in user
+        const workout = await Workout.findOneAndUpdate(
+            { _id: workoutId, userId },
+            updatedWorkout,
+            { new: true }
+        );
+
+        if (!workout) {
+            return res.status(404).send({ message: 'Workout not found or does not belong to the user.' });
+        }
+
+        res.status(200).send({ message: 'Workout updated successfully.', workout });
+    } catch (err) {
+        res.status(500).send({ message: 'Error updating workout.', error: err.message });
+    }
 };
 
 
 /* Delete workouts */
 module.exports.deleteWorkout = (req, res) => {
-    return Workout.findByIdAndDelete(req.params.workoutId)
+    const userId = req.user.id;
+
+    Workout.findByIdAndDelete(req.params.workoutId)
         .then(workout => {
             if (workout) {
-                res.status(200).send({ message: 'Workout deleted successfully' });
+                res.status(200).send({ message: 'Workout deleted successfully.' });
             } else {
-                res.status(404).send({ message: 'Workout not found' });
+                res.status(404).send({ message: 'Workout not found.' });
             }
         })
-        .catch(error => errorHandler(error, req, res));
+        .catch(err => errorHandler(err, req, res));
 };
 
 /* Complete workouts */
@@ -176,25 +195,61 @@ module.exports.deleteWorkout = (req, res) => {
 //         })
 //         .catch(error => errorHandler(error, req, res));
 // };
-module.exports.completeWorkoutStatus = (req, res) => {
-  
-    let updateStatusField = {
-        status: 'Completed'
-    };
+// module.exports.completeWorkoutStatus = (req, res) => {
+//     const userId = req.user.id;
+//     Workout.findByIdAndUpdate(req.params.workoutId, { status: 'Completed' }, { new: true })
+//         .then(workout => {
+//             if (workout) {
+//                 res.status(200).send({ message: 'Workout marked as completed.', userId, workout });
+//             } else {
+//                 res.status(404).send({ message: 'Workout not found.' });
+//             }
+//         })
+//         .catch(err => errorHandler(err, req, res));
+// };
 
-    Workout.findByIdAndUpdate(req.params.workoutId, updateStatusField)
-        .then(workout => {
-            if (workout) {
-                return res.status(201).send(
-                    {
-                        message: 'Workout completed successfully.',
-                        workout
-                    }
-                );
-            } else {
-                return res.status(404).send({ error: 'Workout not found.' });
-            }
-        })
-        .catch(error => errorHandler(error, req, res));
+// module.exports.completeWorkoutStatus = (req, res) => {
+//     const userId = req.user.id;
+        
+//     const updatedStatusWorkout = {
+//         userId: userId,
+//         name: req.body.name,
+//         duration: req.body.duration,
+//         status: 'Completed'
+//     };
+
+//     Workout.findByIdAndUpdate(req.params.workoutId, updatedStatusWorkout, { new: true })
+//         .then(workout => {
+//             if (workout) {
+//                 res.status(200).send({ message: 'Workout marked as completed.', workout });
+//             } else {
+//                 res.status(404).send({ message: 'Workout not found.' });
+//             }
+//         })
+//         .catch(err => errorHandler(err, req, res));
+// };
+
+module.exports.completeWorkoutStatus = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { workoutId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(workoutId)) {
+            return res.status(400).send({ message: 'Invalid workout ID.' });
+        }
+
+        const workout = await Workout.findOneAndUpdate(
+            { _id: workoutId, userId },
+            { status: 'Completed' },
+            { new: true }
+        );
+
+        if (!workout) {
+            return res.status(404).send({ message: 'Workout not found or does not belong to the user.' });
+        }
+
+        res.status(200).send({ message: 'Workout status updated successfully.', workout });
+    } catch (err) {
+        res.status(500).send({ message: 'Error completing workout status.', error: err.message });
+    }
 };
-
